@@ -280,33 +280,51 @@ const accessHeaders = [
 const loadRecentAccess = async () => {
   loadingAccess.value = true
   try {
-    // Simulation de données (à remplacer par votre API)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    recentAccess.value = [
-      {
-        id: 1,
-        etudiant: 'MUKAMBA Jean',
-        nom_salle: 'Salle Informatique A',
-        statut: 'AUTORISE',
-        date_entree: new Date().toISOString()
-      },
-      {
-        id: 2,
-        etudiant: 'NABINTU Marie',
-        nom_salle: 'Bibliothèque',
-        statut: 'AUTORISE',
-        date_entree: new Date(Date.now() - 3600000).toISOString()
-      },
-      {
-        id: 3,
-        etudiant: 'BAHATI Pierre',
-        nom_salle: 'Amphithéâtre',
-        statut: 'REFUSE',
-        date_entree: new Date(Date.now() - 7200000).toISOString()
-      }
-    ]
+    const response = await dashboardAPI.getData()
+    if (response.data.success) {
+      stats.value = [
+        {
+          title: 'Étudiants',
+          subtitle: 'Inscrits dans le système',
+          value: response.data.stats.etudiants.toString(),
+          icon: 'mdi-account-group',
+          color: 'primary'
+        },
+        {
+          title: 'Salles',
+          subtitle: 'Disponibles',
+          value: response.data.stats.salles.toString(),
+          icon: 'mdi-domain',
+          color: 'success'
+        },
+        {
+          title: 'Autorisations',
+          subtitle: 'Actives',
+          value: response.data.stats.autorisations.toString(),
+          icon: 'mdi-key-variant',
+          color: 'warning'
+        },
+        {
+          title: 'Accès aujourd\'hui',
+          subtitle: 'Tentatives d\'accès',
+          value: response.data.stats.acces_aujourdhui.toString(),
+          icon: 'mdi-clock-outline',
+          color: 'info'
+        }
+      ]
+      
+      recentAccess.value = response.data.derniers_acces.map(acces => ({
+        id: acces.id,
+        etudiant: acces.nom ? `${acces.nom} ${acces.prenom}` : 'Inconnu',
+        nom_salle: acces.nom_salle || 'Salle inconnue',
+        statut: acces.statut,
+        date_entree: acces.date_entree
+      }))
+      
+      recentAuthorizations.value = response.data.autorisations_recentes
+    }
   } catch (error) {
+    console.error('Erreur:', error)
     appStore.showSnackbar('Erreur lors du chargement des accès', 'error')
   } finally {
     loadingAccess.value = false
@@ -314,29 +332,7 @@ const loadRecentAccess = async () => {
 }
 
 const loadRecentAuthorizations = async () => {
-  try {
-    // Simulation de données
-    recentAuthorizations.value = [
-      {
-        id: 1,
-        nom: 'MUKAMBA',
-        prenom: 'Jean',
-        nom_salle: 'Salle Informatique A',
-        niveau_acces: 'LECTURE',
-        date_creation: new Date().toISOString()
-      },
-      {
-        id: 2,
-        nom: 'NABINTU',
-        prenom: 'Marie',
-        nom_salle: 'Bibliothèque',
-        niveau_acces: 'LECTURE',
-        date_creation: new Date(Date.now() - 3600000).toISOString()
-      }
-    ]
-  } catch (error) {
-    console.error('Erreur chargement autorisations:', error)
-  }
+  // Les autorisations récentes sont chargées avec loadRecentAccess
 }
 
 const formatDate = (dateString) => {

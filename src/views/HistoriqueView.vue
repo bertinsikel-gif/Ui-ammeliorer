@@ -395,68 +395,12 @@ const filteredHistorique = computed(() => {
 const loadHistorique = async () => {
   loading.value = true
   try {
-    // Simulation de données (remplacer par l'API réelle)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    historique.value = [
-      {
-        id: 1,
-        etudiant_id: 1,
-        nom: 'MUKAMBA',
-        prenom: 'Jean',
-        matricule_utilise: '05/23.09319',
-        salle_id: 1,
-        nom_salle: 'Salle Informatique A',
-        type_acces: 'ENTREE',
-        statut: 'AUTORISE',
-        date_entree: new Date().toISOString(),
-        ip_address: '192.168.1.100',
-        user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      },
-      {
-        id: 2,
-        etudiant_id: 2,
-        nom: 'NABINTU',
-        prenom: 'Marie',
-        matricule_utilise: '05/23.09320',
-        salle_id: 2,
-        nom_salle: 'Bibliothèque',
-        type_acces: 'ENTREE',
-        statut: 'AUTORISE',
-        date_entree: new Date(Date.now() - 3600000).toISOString(),
-        ip_address: '192.168.1.101',
-        user_agent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
-      },
-      {
-        id: 3,
-        etudiant_id: null,
-        nom: null,
-        prenom: null,
-        matricule_utilise: '05/23.99999',
-        salle_id: 1,
-        nom_salle: 'Salle Informatique A',
-        type_acces: 'ENTREE',
-        statut: 'REFUSE',
-        date_entree: new Date(Date.now() - 7200000).toISOString(),
-        ip_address: '192.168.1.102',
-        user_agent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15'
-      },
-      {
-        id: 4,
-        etudiant_id: 1,
-        nom: 'MUKAMBA',
-        prenom: 'Jean',
-        matricule_utilise: '05/23.09319',
-        salle_id: 1,
-        nom_salle: 'Salle Informatique A',
-        type_acces: 'SORTIE',
-        statut: 'AUTORISE',
-        date_entree: new Date(Date.now() - 10800000).toISOString(),
-        ip_address: '192.168.1.100',
-        user_agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
-    ]
+    const response = await historiqueAPI.getAll(itemsPerPage.value * 10) // Charger plus de données
+    if (response.data.success) {
+      historique.value = response.data.historique
+    }
   } catch (error) {
+    console.error('Erreur:', error)
     appStore.showSnackbar('Erreur lors du chargement de l\'historique', 'error')
   } finally {
     loading.value = false

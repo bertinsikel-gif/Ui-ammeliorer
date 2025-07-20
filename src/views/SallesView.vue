@@ -295,47 +295,14 @@ const filteredSalles = computed(() => {
 const loadSalles = async () => {
   loading.value = true
   try {
-    // Simulation de données (remplacer par l'API réelle)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    salles.value = [
-      {
-        id: 1,
-        nom_salle: 'Salle Informatique A',
-        localisation: 'Bâtiment Sciences - 1er étage',
-        description: 'Salle équipée de 30 ordinateurs avec connexion internet haut débit',
-        capacite: 30
-      },
-      {
-        id: 2,
-        nom_salle: 'Amphithéâtre Central',
-        localisation: 'Bâtiment Principal - RDC',
-        description: 'Grand amphithéâtre pour conférences et cours magistraux',
-        capacite: 200
-      },
-      {
-        id: 3,
-        nom_salle: 'Laboratoire Chimie',
-        localisation: 'Bâtiment Sciences - 2ème étage',
-        description: 'Laboratoire de chimie générale avec équipements de sécurité',
-        capacite: 25
-      },
-      {
-        id: 4,
-        nom_salle: 'Bibliothèque Principale',
-        localisation: 'Bâtiment Central - 1er étage',
-        description: 'Espace de lecture et de recherche avec accès aux ressources numériques',
-        capacite: 100
-      },
-      {
-        id: 5,
-        nom_salle: 'Salle de Réunion',
-        localisation: 'Administration - 2ème étage',
-        description: 'Salle pour réunions administratives et rencontres',
-        capacite: 15
-      }
-    ]
+    const response = await sallesAPI.getAll()
+    if (response.data.success) {
+      salles.value = response.data.salles
+    } else {
+      appStore.showSnackbar('Erreur lors du chargement des salles', 'error')
+    }
   } catch (error) {
+    console.error('Erreur:', error)
     appStore.showSnackbar('Erreur lors du chargement des salles', 'error')
   } finally {
     loading.value = false
@@ -372,26 +339,23 @@ const saveSalle = async () => {
 
   saving.value = true
   try {
+    let response
     if (editingSalle.value) {
-      // Modification
-      const index = salles.value.findIndex(s => s.id === editingSalle.value.id)
-      if (index !== -1) {
-        salles.value[index] = { ...form.value, id: editingSalle.value.id }
-      }
-      appStore.showSnackbar('Salle modifiée avec succès', 'success')
+      response = await sallesAPI.update({ ...form.value, id: editingSalle.value.id })
     } else {
-      // Ajout
-      const newSalle = {
-        ...form.value,
-        id: Date.now() // Simulation d'un ID
-      }
-      salles.value.push(newSalle)
-      appStore.showSnackbar('Salle ajoutée avec succès', 'success')
+      response = await sallesAPI.create(form.value)
     }
     
-    closeDialog()
+    if (response.data.success) {
+      appStore.showSnackbar(response.data.message, 'success')
+      closeDialog()
+      loadSalles()
+    } else {
+      appStore.showSnackbar(response.data.message, 'error')
+    }
   } catch (error) {
-    appStore.showSnackbar('Erreur lors de l\'enregistrement', 'error')
+    console.error('Erreur:', error)
+    appStore.showSnackbar(error.response?.data?.message || 'Erreur lors de l\'enregistrement', 'error')
   } finally {
     saving.value = false
   }
@@ -405,16 +369,19 @@ const deleteSalle = (salle) => {
 const confirmDelete = async () => {
   deleting.value = true
   try {
-    const index = salles.value.findIndex(s => s.id === salleToDelete.value.id)
-    if (index !== -1) {
-      salles.value.splice(index, 1)
-    }
+    const response = await sallesAPI.delete(salleToDelete.value.id)
     
-    appStore.showSnackbar('Salle supprimée avec succès', 'success')
-    deleteDialog.value = false
-    salleToDelete.value = null
+    if (response.data.success) {
+      appStore.showSnackbar(response.data.message, 'success')
+      deleteDialog.value = false
+      salleToDelete.value = null
+      loadSalles()
+    } else {
+      appStore.showSnackbar(response.data.message, 'error')
+    }
   } catch (error) {
-    appStore.showSnackbar('Erreur lors de la suppression', 'error')
+    console.error('Erreur:', error)
+    appStore.showSnackbar(error.response?.data?.message || 'Erreur lors de la suppression', 'error')
   } finally {
     deleting.value = false
   }

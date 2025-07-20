@@ -44,9 +44,9 @@ SmartAccess UCB est un système complet de gestion d'accès aux salles pour les 
 
 ## Technologies Utilisées
 
-- **Backend** : PHP natif (sans framework)
+- **Backend** : PHP natif avec architecture MVC
 - **Base de données** : MySQL
-- **Frontend** : Bootstrap 5 + Vue.js 3
+- **Frontend** : Vue.js 3 + Vuetify 3 (Material Design)
 - **API** : REST avec réponses JSON
 - **Intégration** : API UCB pour import des données
 
@@ -56,7 +56,8 @@ SmartAccess UCB est un système complet de gestion d'accès aux salles pour les 
 - Serveur web (Apache/Nginx)
 - PHP 7.4 ou supérieur
 - MySQL 5.7 ou supérieur
-- Extensions PHP : mysqli, json
+- Extensions PHP : PDO, pdo_mysql, json
+- Node.js 16+ (pour le frontend)
 
 ### Étapes d'installation
 
@@ -66,60 +67,78 @@ SmartAccess UCB est un système complet de gestion d'accès aux salles pour les 
    cd smartaccess-ucb
    ```
 
-2. **Configurer la base de données**
+2. **Installer les dépendances frontend**
+   ```bash
+   npm install
+   ```
+
+3. **Configurer la base de données**
    ```bash
    # Importer le script SQL
-   mysql -u root -p < database/smartaccess_ucb.sql
+   mysql -u root -p < supabase/migrations/20250720042307_falling_lodge.sql
    ```
 
-3. **Configurer la connexion**
-   Modifier `includes/db.php` avec vos paramètres :
+4. **Configurer la connexion**
+   Modifier `api/config/database.php` avec vos paramètres :
    ```php
-   $config = [
-       'host' => 'localhost',
-       'username' => 'votre_utilisateur',
-       'password' => 'votre_mot_de_passe',
-       'database' => 'smartaccess_ucb'
-   ];
+   private $host = 'localhost';
+   private $db_name = 'smartaccess_ucb';
+   private $username = 'votre_utilisateur';
+   private $password = 'votre_mot_de_passe';
    ```
 
-4. **Configurer le serveur web**
+5. **Démarrer le serveur de développement**
+   ```bash
+   # Frontend (Vue.js + Vuetify)
+   npm run dev
+   
+   # Backend (PHP) - via serveur web local
+   # Assurez-vous que votre serveur Apache/Nginx pointe vers le dossier du projet
+   ```
+
+6. **Configurer le serveur web**
    - Pointer le DocumentRoot vers le dossier du projet
    - Activer mod_rewrite si nécessaire
+   - Configurer les headers CORS (voir .htaccess)
 
 ## Structure du Projet
 
 ```
 smartaccess-ucb/
-├── admin/                  # Pages d'administration
-│   ├── etudiants.php      # Gestion des étudiants
-│   ├── salles.php         # Gestion des salles
-│   └── acces.php          # Gestion des accès
-├── api/                   # APIs REST
-│   ├── verifier_acces.php # API de vérification d'accès
-│   ├── students.php       # API étudiants
-│   ├── salles.php         # API salles
-│   └── autorisations.php  # API autorisations
-├── includes/              # Fichiers utilitaires
-│   ├── db.php            # Connexion base de données
-│   ├── functions.php     # Fonctions métier
-│   └── session.php       # Gestion des sessions
-├── database/             # Scripts SQL
-│   └── smartaccess_ucb.sql
-├── assets/               # Ressources statiques
-│   ├── css/
-│   └── js/
-├── index.php            # Page d'accueil
-├── login.php            # Connexion admin
-├── logout.php           # Déconnexion
-└── dashboard.php        # Tableau de bord
+├── src/                   # Frontend Vue.js + Vuetify
+│   ├── components/        # Composants réutilisables
+│   ├── views/            # Pages de l'application
+│   ├── stores/           # Gestion d'état (Pinia)
+│   ├── services/         # Services API
+│   └── plugins/          # Configuration Vuetify
+├── api/                  # Backend PHP
+│   ├── config/           # Configuration
+│   │   ├── database.php  # Connexion MySQL
+│   │   └── cors.php      # Configuration CORS
+│   ├── models/           # Modèles de données
+│   │   ├── Student.php   # Modèle Étudiant
+│   │   ├── Salle.php     # Modèle Salle
+│   │   ├── Autorisation.php # Modèle Autorisation
+│   │   └── HistoriqueAcces.php # Modèle Historique
+│   └── endpoints/        # Points d'entrée API
+│       ├── students.php  # API étudiants
+│       ├── salles.php    # API salles
+│       ├── autorisations.php # API autorisations
+│       ├── verifier_acces.php # API vérification
+│       ├── historique.php # API historique
+│       └── dashboard.php # API tableau de bord
+├── supabase/migrations/  # Scripts SQL
+├── public/               # Fichiers publics
+├── package.json          # Dépendances Node.js
+├── vite.config.js        # Configuration Vite
+└── .htaccess            # Configuration Apache
 ```
 
 ## API de Vérification d'Accès
 
 ### Endpoint
 ```
-GET /api/verifier_acces.php?matricule=XXX&salle_id=YYY
+GET /api/endpoints/verifier_acces.php?matricule=XXX&salle_id=YYY
 ```
 
 ### Réponse - Accès Autorisé
@@ -172,27 +191,38 @@ GET https://akhademie.ucbukavu.ac.cd/api/v1/school/entity-main-list?entity_id=un
 - `autorisations` : Autorisations d'accès
 - `historiques_acces` : Historique des tentatives d'accès
 
+### Architecture Backend
+- **Modèles** : Classes PHP pour la gestion des données (PDO)
+- **Endpoints** : APIs REST pour chaque entité
+- **Configuration** : Gestion centralisée de la base de données et CORS
+
+### Architecture Frontend
+- **Vue.js 3** : Framework JavaScript réactif
+- **Vuetify 3** : Composants Material Design
+- **Pinia** : Gestion d'état
+- **Axios** : Client HTTP pour les APIs
+
 ## Sécurité
 
-- Sessions PHP sécurisées avec timeout
+- APIs REST sécurisées avec validation des données
 - Validation des entrées utilisateur
-- Requêtes préparées pour éviter les injections SQL
-- Tokens CSRF pour les formulaires
+- Requêtes préparées PDO pour éviter les injections SQL
+- Headers CORS configurés
 - Soft delete pour préserver l'historique
 
 ## Déploiement
 
-### Serveur Local (XAMPP)
-1. Copier le projet dans `htdocs/smartaccess-ucb`
-2. Démarrer Apache et MySQL
-3. Importer la base de données
-4. Accéder à `http://localhost/smartaccess-ucb`
+### Développement Local
+1. **Backend** : Serveur Apache/Nginx avec PHP
+2. **Frontend** : `npm run dev` (Vite dev server sur port 3000)
+3. **Base de données** : MySQL local
 
-### Hébergeur Gratuit (000webhost)
-1. Uploader les fichiers via FTP
-2. Créer la base de données MySQL
-3. Modifier la configuration dans `includes/db.php`
-4. Importer le script SQL
+### Production
+1. **Build frontend** : `npm run build`
+2. **Déployer** : Copier les fichiers sur le serveur
+3. **Configuration** : Ajuster les paramètres de base de données
+4. **Serveur web** : Configurer Apache/Nginx avec .htaccess
+
 
 ## Support
 

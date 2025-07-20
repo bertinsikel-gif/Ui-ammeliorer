@@ -267,39 +267,14 @@ const rules = {
 const loadStudents = async () => {
   loading.value = true
   try {
-    // Simulation de données (remplacer par l'API réelle)
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    students.value = [
-      {
-        id: 1,
-        matricule: '05/23.09319',
-        nom: 'MUKAMBA',
-        prenom: 'Jean',
-        email: 'jean.mukamba@ucbukavu.ac.cd',
-        faculte: 'Sciences Informatiques',
-        promotion: '2023-2024'
-      },
-      {
-        id: 2,
-        matricule: '05/23.09320',
-        nom: 'NABINTU',
-        prenom: 'Marie',
-        email: 'marie.nabintu@ucbukavu.ac.cd',
-        faculte: 'Sciences Informatiques',
-        promotion: '2023-2024'
-      },
-      {
-        id: 3,
-        matricule: '02/22.01234',
-        nom: 'BAHATI',
-        prenom: 'Pierre',
-        email: 'pierre.bahati@ucbukavu.ac.cd',
-        faculte: 'Sciences Économiques',
-        promotion: '2022-2023'
-      }
-    ]
+    const response = await studentsAPI.getAll()
+    if (response.data.success) {
+      students.value = response.data.students
+    } else {
+      appStore.showSnackbar('Erreur lors du chargement des étudiants', 'error')
+    }
   } catch (error) {
+    console.error('Erreur:', error)
     appStore.showSnackbar('Erreur lors du chargement des étudiants', 'error')
   } finally {
     loading.value = false
@@ -365,26 +340,23 @@ const saveStudent = async () => {
 
   saving.value = true
   try {
+    let response
     if (editingStudent.value) {
-      // Modification
-      const index = students.value.findIndex(s => s.id === editingStudent.value.id)
-      if (index !== -1) {
-        students.value[index] = { ...form.value, id: editingStudent.value.id }
-      }
-      appStore.showSnackbar('Étudiant modifié avec succès', 'success')
+      response = await studentsAPI.update({ ...form.value, id: editingStudent.value.id })
     } else {
-      // Ajout
-      const newStudent = {
-        ...form.value,
-        id: Date.now() // Simulation d'un ID
-      }
-      students.value.push(newStudent)
-      appStore.showSnackbar('Étudiant ajouté avec succès', 'success')
+      response = await studentsAPI.create(form.value)
     }
     
-    closeDialog()
+    if (response.data.success) {
+      appStore.showSnackbar(response.data.message, 'success')
+      closeDialog()
+      loadStudents()
+    } else {
+      appStore.showSnackbar(response.data.message, 'error')
+    }
   } catch (error) {
-    appStore.showSnackbar('Erreur lors de l\'enregistrement', 'error')
+    console.error('Erreur:', error)
+    appStore.showSnackbar(error.response?.data?.message || 'Erreur lors de l\'enregistrement', 'error')
   } finally {
     saving.value = false
   }
@@ -398,16 +370,19 @@ const deleteStudent = (student) => {
 const confirmDelete = async () => {
   deleting.value = true
   try {
-    const index = students.value.findIndex(s => s.id === studentToDelete.value.id)
-    if (index !== -1) {
-      students.value.splice(index, 1)
-    }
+    const response = await studentsAPI.delete(studentToDelete.value.id)
     
-    appStore.showSnackbar('Étudiant supprimé avec succès', 'success')
-    deleteDialog.value = false
-    studentToDelete.value = null
+    if (response.data.success) {
+      appStore.showSnackbar(response.data.message, 'success')
+      deleteDialog.value = false
+      studentToDelete.value = null
+      loadStudents()
+    } else {
+      appStore.showSnackbar(response.data.message, 'error')
+    }
   } catch (error) {
-    appStore.showSnackbar('Erreur lors de la suppression', 'error')
+    console.error('Erreur:', error)
+    appStore.showSnackbar(error.response?.data?.message || 'Erreur lors de la suppression', 'error')
   } finally {
     deleting.value = false
   }
