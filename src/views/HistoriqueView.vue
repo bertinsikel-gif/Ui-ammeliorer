@@ -288,6 +288,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
+import { historiqueAPI } from '@/services/api'
 import AppNavigation from '@/components/AppNavigation.vue'
 import AppBar from '@/components/AppBar.vue'
 

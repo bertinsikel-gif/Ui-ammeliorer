@@ -18,6 +18,10 @@ api.interceptors.response.use(
 )
 
 // Services API
+export const authAPI = {
+  login: (credentials) => api.post('/auth.php', credentials)
+}
+
 export const studentsAPI = {
   getAll: () => api.get('/students.php'),
   getById: (id) => api.get(`/students.php?id=${id}`),

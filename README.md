@@ -75,11 +75,11 @@ SmartAccess UCB est un système complet de gestion d'accès aux salles pour les 
 3. **Configurer la base de données**
    ```bash
    # Importer le script SQL
-   mysql -u root -p < supabase/migrations/20250720042307_falling_lodge.sql
+   mysql -u root -p < database/schema.sql
    ```
 
 4. **Configurer la connexion**
-   Modifier `api/config/database.php` avec vos paramètres :
+   Modifier `api/config/database.php` avec vos paramètres MySQL :
    ```php
    private $host = 'localhost';
    private $db_name = 'smartaccess_ucb';
@@ -101,6 +101,13 @@ SmartAccess UCB est un système complet de gestion d'accès aux salles pour les 
    - Activer mod_rewrite si nécessaire
    - Configurer les headers CORS (voir .htaccess)
 
+### Authentification
+
+**Compte administrateur par défaut :**
+- Utilisateur : `admin`
+- Mot de passe : `admin123`
+
+L'authentification se fait via l'API PHP `/api/endpoints/auth.php`
 ## Structure du Projet
 
 ```

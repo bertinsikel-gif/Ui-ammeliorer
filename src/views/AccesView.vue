@@ -324,7 +324,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
-import { ucbAPI } from '@/services/api'
+import { studentsAPI, sallesAPI, autorisationsAPI, ucbAPI } from '@/services/api'
 import AppNavigation from '@/components/AppNavigation.vue'
 import AppBar from '@/components/AppBar.vue'
 

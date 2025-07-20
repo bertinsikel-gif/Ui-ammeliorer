@@ -202,6 +202,7 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
+import { dashboardAPI } from '@/services/api'
 import AppNavigation from '@/components/AppNavigation.vue'
 import AppBar from '@/components/AppBar.vue'
 

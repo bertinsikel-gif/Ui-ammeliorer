@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import api from '@/services/api'
+import { authAPI } from '@/services/api'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -14,24 +14,19 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     
     try {
-      // Simulation d'authentification (à remplacer par votre API)
-      if (credentials.username === 'admin' && credentials.password === 'admin123') {
-        user.value = {
-          id: 1,
-          username: 'admin',
-          nom: 'Administrateur',
-          prenom: 'Système',
-          email: 'admin@ucbukavu.ac.cd'
-        }
+      const response = await authAPI.login(credentials)
+      
+      if (response.data.success) {
+        user.value = response.data.user
         
         // Stocker dans localStorage
         localStorage.setItem('smartaccess_user', JSON.stringify(user.value))
         return true
       } else {
-        throw new Error('Identifiants incorrects')
+        throw new Error(response.data.message || 'Erreur de connexion')
       }
     } catch (err) {
-      error.value = err.message
+      error.value = err.response?.data?.message || err.message || 'Erreur de connexion'
       return false
     } finally {
       loading.value = false
@@ -46,7 +41,12 @@ export const useAuthStore = defineStore('auth', () => {
   const initAuth = () => {
     const savedUser = localStorage.getItem('smartaccess_user')
     if (savedUser) {
-      user.value = JSON.parse(savedUser)
+      try {
+        user.value = JSON.parse(savedUser)
+      } catch (error) {
+        console.error('Erreur lors de la récupération des données utilisateur:', error)
+        localStorage.removeItem('smartaccess_user')
+      }
     }
   }
 
